@@ -210,7 +210,7 @@ function filtrarProductosPorCategoria(categoria) {
 // Función para formatear precio (sin decimales)
 function formatearPrecio(precio) {
   const numero = Math.round(precio);
-  return formatearNumero(numero);
+  return `$ ${formatearNumero(numero)}`;
 }
 
 // Función para formatear precio con decimales (para recibos)
@@ -588,6 +588,88 @@ function generarTicketCocina(pedido) {
 function obtenerVentanaImpresion() {
   if (!ventanaImpresion || ventanaImpresion.closed) {
     ventanaImpresion = window.open('', 'ventanaImpresion', 'width=400,height=600');
+    if (ventanaImpresion) {
+      ventanaImpresion.document.write(`
+        <html>
+          <head>
+            <title>Impresión</title>
+            <style>
+              body { 
+                font-family: monospace;
+                font-size: 14px;
+                width: 80mm;
+                margin: 0;
+                padding: 2mm;
+              }
+              .text-center { text-align: center; }
+              .text-right { text-align: right; }
+              .mb-1 { margin-bottom: 1px; }
+              .mt-1 { margin-top: 1px; }
+              .logo-container {
+                text-align: center;
+                margin-bottom: 5px;
+              }
+              .logo-container img {
+                max-width: 100%;
+                max-height: 50px;
+                object-fit: contain;
+              }
+              table { 
+                width: 100%;
+                border-collapse: collapse;
+                margin: 2px 0;
+              }
+              th, td { 
+                padding: 1px;
+                text-align: left;
+                font-size: 14px;
+              }
+              .border-top { 
+                border-top: 1px dashed #000;
+                margin-top: 2px;
+                padding-top: 2px;
+              }
+              .header {
+                border-bottom: 1px dashed #000;
+                padding-bottom: 2px;
+                margin-bottom: 2px;
+              }
+              .total-row {
+                font-weight: bold;
+                font-size: 15px;
+              }
+              .botones-impresion {
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                z-index: 1000;
+              }
+              .botones-impresion button {
+                margin-left: 5px;
+                padding: 5px 10px;
+                background: #007bff;
+                color: white;
+                border: none;
+                border-radius: 3px;
+                cursor: pointer;
+              }
+              .botones-impresion button:hover {
+                background: #0056b3;
+              }
+              @media print {
+                .botones-impresion {
+                  display: none;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <div id="contenido"></div>
+          </body>
+        </html>
+      `);
+      ventanaImpresion.document.close();
+    }
   }
   return ventanaImpresion;
 }
@@ -595,6 +677,10 @@ function obtenerVentanaImpresion() {
 // Función para imprimir ticket de cocina
 function imprimirTicketCocina(mesa, productos) {
   const ventana = obtenerVentanaImpresion();
+  if (!ventana) {
+    alert('No se pudo abrir la ventana de impresión. Por favor, verifique que los bloqueadores de ventanas emergentes estén desactivados.');
+    return;
+  }
   
   // Obtener el pedido completo para acceder a la información del cliente
   const pedidoCompleto = mesasActivas.get(mesa);
@@ -617,140 +703,51 @@ function imprimirTicketCocina(mesa, productos) {
   }
   
   const contenido = `
-    <html>
-      <head>
-        <title>Ticket Cocina</title>
-        <style>
-          body { 
-            font-family: monospace;
-            font-size: 14px;
-            width: 80mm;
-            margin: 0;
-            padding: 2mm;
-          }
-          .text-center { text-align: center; }
-          .mb-1 { margin-bottom: 1px; }
-          .mt-1 { margin-top: 1px; }
-          table { 
-            width: 100%;
-            border-collapse: collapse;
-            margin: 2px 0;
-          }
-          th, td { 
-            padding: 1px;
-            text-align: left;
-            font-size: 14px;
-          }
-          .border-top { 
-            border-top: 1px dashed #000;
-            margin-top: 2px;
-            padding-top: 2px;
-          }
-          .header {
-            border-bottom: 1px dashed #000;
-            padding-bottom: 2px;
-            margin-bottom: 2px;
-          }
-          .producto {
-            font-weight: bold;
-            font-size: 15px;
-          }
-          .detalles {
-            font-size: 13px;
-            color: #000;
-            font-style: italic;
-            margin-top: 1px;
-            padding-left: 2px;
-          }
-          .cliente-info {
-            margin: 4px 0;
-            padding: 2px;
-            border: 1px dashed #000;
-            border-radius: 2px;
-            font-size: 13px;
-          }
-          .cliente-label {
-            font-weight: bold;
-            font-size: 15px;
-            margin-bottom: 1px;
-          }
-          .cliente-datos {
-            font-size: 13px;
-            line-height: 1.2;
-          }
-          .botones-impresion {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 1000;
-          }
-          .botones-impresion button {
-            margin-left: 5px;
-            padding: 5px 10px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-          }
-          .botones-impresion button:hover {
-            background: #0056b3;
-          }
-          @media print {
-            .botones-impresion {
-              display: none;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="botones-impresion">
-          <button onclick="window.print()">Imprimir</button>
-          <button onclick="window.close()">Cerrar</button>
-        </div>
+    <div class="header text-center">
+      <h2 style="margin: 0; font-size: 14px;">COCINA</h2>
+      <div class="mb-1">Mesa: ${mesa}</div>
+      <div class="mb-1">Ronda: ${pedidoCompleto && pedidoCompleto.ronda ? pedidoCompleto.ronda : 1}</div>
+      <div class="mb-1">${new Date().toLocaleString()}</div>
+    </div>
+    
+    ${infoCliente}
+    
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 20%">Cant</th>
+          <th>Producto</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${productos.map(item => `
+          <tr>
+            <td>${item.cantidad}</td>
+            <td>
+              <div class="producto" style="font-weight: bold; font-size: 16px;">${item.nombre}</div>
+              ${item.detalles ? `
+                <div class="detalles">
+                  <span class="detalle-label">Detalle:</span> ${item.detalles}
+                </div>
+              ` : ''}
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    
+    <div class="text-center mt-1">
+      <div class="border-top">¡Gracias!</div>
+    </div>
 
-        <div class="header text-center">
-          <h2 style="margin: 0; font-size: 14px;">COCINA</h2>
-          <div class="mb-1">Mesa: ${mesa}</div>
-          <div class="mb-1">Ronda: ${pedidoCompleto && pedidoCompleto.ronda ? pedidoCompleto.ronda : 1}</div>
-          <div class="mb-1">${new Date().toLocaleString()}</div>
-        </div>
-        
-        ${infoCliente}
-        
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 20%">Cant</th>
-              <th>Producto</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${productos.map(item => `
-              <tr>
-                <td>${item.cantidad}</td>
-                <td>
-                  <div class="producto">${item.nombre}</div>
-                  ${item.detalles ? `
-                    <div class="detalles">
-                      <span class="detalle-label">Detalle:</span> ${item.detalles}
-                    </div>
-                  ` : ''}
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-        
-        <div class="text-center mt-1">
-          <div class="border-top">¡Gracias!</div>
-        </div>
-      </body>
-    </html>
+    <div class="botones-impresion">
+      <button onclick="window.print()">Imprimir</button>
+      <button onclick="window.close()">Cerrar</button>
+    </div>
   `;
   
-  ventana.document.write(contenido);
-  ventana.document.close();
+  ventana.document.getElementById('contenido').innerHTML = contenido;
+  ventana.focus();
 }
 
 // Función para mostrar el modal de pago
@@ -1250,6 +1247,10 @@ function procesarPago() {
 
   // Imprimir factura
   const ventana = obtenerVentanaImpresion();
+  if (!ventana) {
+    alert('No se pudo abrir la ventana de impresión. Por favor, verifique que los bloqueadores de ventanas emergentes estén desactivados.');
+    return;
+  }
   
   let tipoPedido = '';
   let infoAdicional = '';
@@ -1284,146 +1285,70 @@ function procesarPago() {
   };
   
   const contenido = `
-    <html>
-      <head>
-        <title>Recibo</title>
-        <style>
-          body { 
-            font-family: monospace;
-            font-size: 14px;
-            width: 80mm;
-            margin: 0;
-            padding: 2mm;
-          }
-          .text-center { text-align: center; }
-          .text-right { text-align: right; }
-          .mb-1 { margin-bottom: 1px; }
-          .mt-1 { margin-top: 1px; }
-          .logo-container {
-            text-align: center;
-            margin-bottom: 5px;
-          }
-          .logo-container img {
-            max-width: 100%;
-            max-height: 50px;
-            object-fit: contain;
-          }
-          table { 
-            width: 100%;
-            border-collapse: collapse;
-            margin: 2px 0;
-          }
-          th, td { 
-            padding: 1px;
-            text-align: left;
-            font-size: 14px;
-          }
-          .border-top { 
-            border-top: 1px dashed #000;
-            margin-top: 2px;
-            padding-top: 2px;
-          }
-          .header {
-            border-bottom: 1px dashed #000;
-            padding-bottom: 2px;
-            margin-bottom: 2px;
-          }
-          .total-row {
-            font-weight: bold;
-            font-size: 15px;
-          }
-          .botones-impresion {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 1000;
-          }
-          .botones-impresion button {
-            margin-left: 5px;
-            padding: 5px 10px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-          }
-          .botones-impresion button:hover {
-            background: #0056b3;
-          }
-          @media print {
-            .botones-impresion {
-              display: none;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="botones-impresion">
-          <button onclick="window.print()">Imprimir</button>
-          <button onclick="window.close()">Cerrar</button>
-        </div>
+    <div class="logo-container">
+      ${localStorage.getItem('logoNegocio') ? 
+        `<img src="${localStorage.getItem('logoNegocio')}" alt="Logo">` : 
+        ''}
+    </div>
 
-        <div class="logo-container">
-          ${localStorage.getItem('logoNegocio') ? 
-            `<img src="${localStorage.getItem('logoNegocio')}" alt="Logo">` : 
-            ''}
-        </div>
+    <div class="header text-center">
+      <h2 style="margin: 0; font-size: 14px;">RESTAURANTE</h2>
+      ${tipoPedido ? `<div class="mb-1">${tipoPedido}</div>` : ''}
+      <div class="mb-1">${factura.fecha}</div>
+      ${!factura.mesa.startsWith('DOM-') && !factura.mesa.startsWith('REC-') ? 
+        `<div class="mb-1">Mesa: ${factura.mesa}</div>` : ''}
+    </div>
+    
+    ${infoAdicional}
+    
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 40%">Producto</th>
+          <th style="width: 15%">Cant</th>
+          <th style="width: 20%">Precio</th>
+          <th style="width: 25%">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${factura.items.map(item => `
+          <tr>
+            <td><strong>${item.nombre}</strong></td>
+            <td>${item.cantidad}</td>
+            <td class="text-right">${formatearNumero(item.precio)}</td>
+            <td class="text-right">${formatearNumero(item.precio * item.cantidad)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    
+    <div class="border-top">
+      <div class="mb-1">Subtotal: <span class="text-right">$ ${formatearNumero(factura.subtotal)}</span></div>
+      <div class="mb-1">Propina (${factura.propina}%): <span class="text-right">$ ${formatearNumero(factura.propinaMonto)}</span></div>
+      <div class="mb-1">Descuento: <span class="text-right">$ ${formatearNumero(factura.descuento)}</span></div>
+      <div class="mb-1 total-row"><strong>Total: $ ${formatearNumero(factura.total)}</strong></div>
+    </div>
+    
+    <div class="border-top">
+      <div class="mb-1">Pago: ${factura.metodoPago}</div>
+      ${factura.metodoPago === 'efectivo' ? `
+        <div class="mb-1">Recibido: <span class="text-right">$ ${formatearNumero(factura.montoRecibido)}</span></div>
+        <div class="mb-1">Cambio: <span class="text-right">$ ${formatearNumero(factura.cambio)}</span></div>
+      ` : ''}
+    </div>
+    
+    <div class="text-center mt-1">
+      <div class="border-top">¡Gracias por su visita!</div>
+    </div>
 
-        <div class="header text-center">
-          <h2 style="margin: 0; font-size: 14px;">RESTAURANTE</h2>
-          ${tipoPedido ? `<div class="mb-1">${tipoPedido}</div>` : ''}
-          <div class="mb-1">${factura.fecha}</div>
-          ${!factura.mesa.startsWith('DOM-') && !factura.mesa.startsWith('REC-') ? 
-            `<div class="mb-1">Mesa: ${factura.mesa}</div>` : ''}
-        </div>
-        
-        ${infoAdicional}
-        
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 40%">Producto</th>
-              <th style="width: 15%">Cant</th>
-              <th style="width: 20%">Precio</th>
-              <th style="width: 25%">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${factura.items.map(item => `
-              <tr>
-                <td><strong>${item.nombre}</strong></td>
-                <td>${item.cantidad}</td>
-                <td class="text-right">$ ${formatearNumero(item.precio)}</td>
-                <td class="text-right">$ ${formatearNumero(item.precio * item.cantidad)}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-        
-        <div class="border-top">
-          <div class="mb-1">Subtotal: <span class="text-right">$ ${formatearNumero(factura.subtotal)}</span></div>
-          <div class="mb-1">Propina (${factura.propina}%): <span class="text-right">$ ${formatearNumero(factura.propinaMonto)}</span></div>
-          <div class="mb-1">Descuento: <span class="text-right">$ ${formatearNumero(factura.descuento)}</span></div>
-          <div class="mb-1 total-row"><strong>Total: $ ${formatearNumero(factura.total)}</strong></div>
-        </div>
-        
-        <div class="border-top">
-          <div class="mb-1">Pago: ${factura.metodoPago}</div>
-          ${factura.metodoPago === 'efectivo' ? `
-            <div class="mb-1">Recibido: <span class="text-right">$ ${formatearNumero(factura.montoRecibido)}</span></div>
-            <div class="mb-1">Cambio: <span class="text-right">$ ${formatearNumero(factura.cambio)}</span></div>
-          ` : ''}
-        </div>
-        
-        <div class="text-center mt-1">
-          <div class="border-top">¡Gracias por su visita!</div>
-        </div>
-      </body>
-    </html>
+    <div class="botones-impresion">
+      <button onclick="window.print()">Imprimir</button>
+      <button onclick="window.close()">Cerrar</button>
+    </div>
   `;
   
-  ventana.document.write(contenido);
-  ventana.document.close();
+  ventana.document.getElementById('contenido').innerHTML = contenido;
+  ventana.focus();
 
   // Limpiar la mesa
   mesasActivas.delete(mesaSeleccionada);
@@ -1461,6 +1386,10 @@ function reimprimirFactura(ventaId) {
   const venta = historialVentas.find(v => v.id === ventaId);
   if (venta) {
     const ventana = obtenerVentanaImpresion();
+    if (!ventana) {
+      alert('No se pudo abrir la ventana de impresión. Por favor, verifique que los bloqueadores de ventanas emergentes estén desactivados.');
+      return;
+    }
     
     let tipoPedido = '';
     let infoAdicional = '';
@@ -1590,8 +1519,8 @@ function reimprimirFactura(ventaId) {
                 <tr>
                   <td>${item.nombre}</td>
                   <td>${item.cantidad}</td>
-                  <td>$ ${formatearNumero(item.precio)}</td>
-                  <td>$ ${formatearNumero(item.precio * item.cantidad)}</td>
+                  <td>${formatearNumero(item.precio)}</td>
+                  <td>${formatearNumero(item.precio * item.cantidad)}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -1991,7 +1920,7 @@ function mostrarModalHistorialCocina() {
 
 // Función para formatear número
 function formatearNumero(num) {
-  return `$ ${num.toLocaleString('es-CO')}`;
+  return num.toLocaleString('es-CO');
 }
 
 // Función para inicializar WhatsApp Web
