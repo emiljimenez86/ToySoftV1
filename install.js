@@ -24,12 +24,15 @@ function showInstallButton() {
 function hideInstallButton() {
     if (installButton) {
         installButton.style.display = 'none';
+        // Guardar en localStorage que la app está instalada
+        localStorage.setItem('appInstalled', 'true');
     }
 }
 
 // Verificar si la app ya está instalada
 if (window.matchMedia('(display-mode: standalone)').matches || 
-    window.navigator.standalone === true) {
+    window.navigator.standalone === true ||
+    localStorage.getItem('appInstalled') === 'true') {
     hideInstallButton();
 }
 
